@@ -1,0 +1,40 @@
+name: Test, Build, and Plan CDK Diff
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "README.md"
+
+jobs:
+  test-and-synth:
+    name: Test, Build, and Diff CDK project
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout repository 📥
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 18 🤘
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: Install dependencies 🎁
+        run: npm ci
+
+      - name: Run Unit Tests 🔬
+        run: npm test
+
+      - name: Configure AWS Credentials 🪪
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::000000000000:role/gh-actions-deployment-role
+          aws-region: eu-central-1
+
+      - name: CDK Diff 🧾
+        run: |
+          npm run cdk diff
